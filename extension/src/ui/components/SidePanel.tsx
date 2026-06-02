@@ -28,6 +28,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Player from '@project/common/app/components/Player';
 import { PlaybackPreferences } from '@project/common/app';
 import { AlertColor } from '@mui/material/Alert';
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import MuiButton from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import type { AiExplainResult } from "@project/common";
 import Alert from '@project/common/app/components/Alert';
 import { LocalizedError } from '@project/common/app';
 import { useTranslation } from 'react-i18next';
@@ -124,6 +131,11 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
     const [syncedVideoTab, setSyncedVideoElement] = useState<VideoTabModel>();
     const [recordingAudio, setRecordingAudio] = useState<boolean>(false);
     const [viewingAsbplayer, setViewingAsbplayer] = useState<AsbplayerInstance>();
+    const [explainOpen, setExplainOpen] = useState(false);
+    const [explainLoading, setExplainLoading] = useState(false);
+    const [explainResult, setExplainResult] = useState<AiExplainResult | null>(null);
+    const [explainError, setExplainError] = useState<string | null>(null);
+    const [explainText, setExplainText] = useState("");
 
     const keyBinder = useAppKeyBinder(settings.keyBindSet, extension);
     const currentTabId = useCurrentTabId();
@@ -562,6 +574,46 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
         [syncedVideoTab, settings.clickToMineDefaultAction, currentTabId]
     );
 
+    const handleExplainAi = useCallback(
+        (subtitle: any) => {
+            const text = subtitle?.text ?? "";
+            if (!text) return;
+            setExplainText(text);
+            setExplainOpen(true);
+            setExplainLoading(true);
+            setExplainResult(null);
+            setExplainError(null);
+            const messageId = "ai-explain-" + Date.now();
+            const request = {
+                sender: "asbplayerv2",
+                message: {
+                    command: "ai-explain-request",
+                    messageId,
+                    text,
+                    targetLanguage: "English",
+                    nativeLanguage: "Spanish",
+                },
+            };
+            browser.runtime.sendMessage(request).then((response: any) => {
+                setExplainLoading(false);
+                if (response?.error) {
+                    setExplainError(response.error);
+                } else if (response?.result) {
+                    setExplainResult(response.result);
+                } else {
+                    setExplainError("No response from AI service");
+                }
+            }).catch((err: any) => {
+                setExplainLoading(false);
+                setExplainError(err.message ?? "Failed to send message");
+            });
+        },
+        []
+    );
+
+    const handleCloseExplain = useCallback(() => {
+        setExplainOpen(false);
+    }, []);
     const handleOpenUserGuide = useCallback(() => {
         browser.tabs.create({ active: true, url: 'https://docs.asbplayer.dev/docs/intro' });
     }, []);
@@ -684,6 +736,7 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                                 settings={settings}
                                 playbackPreferences={playbackPreferences}
                                 onCopy={handleMineFromSubtitlePlayer}
+                                onExplainAi={handleExplainAi}
                                 onError={handleError}
                                 onUnloadVideo={noOp}
                                 onLoaded={noOp}
@@ -707,9 +760,54 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                                 miningContext={miningContext}
                                 keyBinder={keyBinder}
                             />
+                            <Dialog open={explainOpen} onClose={handleCloseExplain} maxWidth="sm" fullWidth>
+                                <DialogTitle sx={{ pb: 1 }}>🧠 AI Explain</DialogTitle>
+                                <DialogContent>
+                                    <Typography variant="body2" sx={{ mb: 2, p: 1, bgcolor: "action.hover", borderRadius: 1, fontStyle: "italic" }}>
+                                        {explainText}
+                                    </Typography>
+                                    {explainLoading && (
+                                        <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
+                                            <CircularProgress size={32} />
+                                        </div>
+                                    )}
+                                    {explainError && (
+                                        <Typography color="error" variant="body2">{explainError}</Typography>
+                                    )}
+                                    {explainResult && (
+                                        <div>
+                                            <Typography variant="subtitle2" sx={{ mt: 1 }}>Translation</Typography>
+                                            <Typography variant="body2" sx={{ mb: 1 }}>{explainResult.translation}</Typography>
+                                            {explainResult.grammar && (
+                                                <>
+                                                    <Typography variant="subtitle2" sx={{ mt: 1 }}>Grammar</Typography>
+                                                    <Typography variant="body2" sx={{ mb: 1 }}>{explainResult.grammar}</Typography>
+                                                </>
+                                            )}
+                                            {explainResult.examples?.length > 0 && (
+                                                <>
+                                                    <Typography variant="subtitle2" sx={{ mt: 1 }}>Examples</Typography>
+                                                    {explainResult.examples.map((ex: string, i: number) => (
+                                                        <Typography key={i} variant="body2" sx={{ ml: 1 }}>• {ex}</Typography>
+                                                    ))}
+                                                </>
+                                            )}
+                                            {explainResult.tip && (
+                                                <>
+                                                    <Typography variant="subtitle2" sx={{ mt: 1 }}>💡 Tip</Typography>
+                                                    <Typography variant="body2">{explainResult.tip}</Typography>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+                                </DialogContent>
+                                <DialogActions>
+                                    <MuiButton onClick={handleCloseExplain}>Close</MuiButton>
+                                </DialogActions>
+                            </Dialog>
                             <StatisticsDrawer
                                 mediaId={syncedVideoTab?.src}
-                                open={statisticsOpen || extensionRequestedLocation === 'statistics'}
+                                open={statisticsOpen || extensionRequestedLocation === "statistics"}
                                 settings={settings}
                                 showBackButton
                                 hasSubtitles={subtitles !== undefined && subtitles.length > 0}

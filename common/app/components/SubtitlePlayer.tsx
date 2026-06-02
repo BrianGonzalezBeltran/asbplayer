@@ -26,6 +26,7 @@ import { SubtitleAnnotations } from '@project/common/subtitle-annotations';
 import { KeyBinder } from '@project/common/key-binder';
 import SubtitleTextImage from '@project/common/components/SubtitleTextImage';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
+import PsychologyIcon from '@mui/icons-material/Psychology';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
@@ -222,6 +223,7 @@ interface SubtitleRowProps extends TableRowProps {
     disabled: boolean;
     subtitle: DisplaySubtitleModel;
     showCopyButton: boolean;
+    onExplainAi?: (subtitle: DisplaySubtitleModel) => void;
     subtitleRef: RefObject<HTMLTableRowElement | null>;
     onClickSubtitle: (index: number) => void;
     onCopySubtitle: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, index: number) => void;
@@ -241,6 +243,7 @@ const SubtitleRow = React.memo(function SubtitleRow({
     compressed,
     disabled,
     subtitle,
+    onExplainAi,
     showCopyButton,
     subtitleHtml,
 }: SubtitleRowProps) {
@@ -311,6 +314,28 @@ const SubtitleRow = React.memo(function SubtitleRow({
                     </IconButton>
                 </TableCell>
             )}
+            {onExplainAi && (
+                <TableCell className={classes.copyButton}>
+                    <IconButton
+                        disabled={selectionState !== undefined}
+                        onClick={(e) => { e.stopPropagation(); onExplainAi(subtitle); }}
+                        title="AI Explain"
+                    >
+                        <PsychologyIcon fontSize={compressed ? 'small' : 'medium'} />
+                    </IconButton>
+                </TableCell>
+            )}
+            {onExplainAi && (
+                <TableCell className={classes.copyButton}>
+                    <IconButton
+                        disabled={selectionState !== undefined}
+                        onClick={(e) => { e.stopPropagation(); onExplainAi(subtitle); }}
+                        title="AI Explain"
+                    >
+                        <PsychologyIcon fontSize={compressed ? 'small' : 'medium'} />
+                    </IconButton>
+                </TableCell>
+            )}
             <TableCell className={classes.timestamp}>
                 <div>
                     <span style={{ display: 'none' }}>.</span>
@@ -373,6 +398,7 @@ interface SubtitlePlayerProps {
     compressed: boolean;
     resizable: boolean;
     showCopyButton: boolean;
+    onExplainAi?: (subtitle: DisplaySubtitleModel) => void;
     loading: boolean;
     drawerOpen: boolean;
     appBarHidden: boolean;
@@ -410,6 +436,7 @@ export default function SubtitlePlayer({
     compressed,
     resizable,
     showCopyButton,
+    onExplainAi,
     loading,
     drawerOpen,
     appBarHidden,
@@ -1168,6 +1195,8 @@ export default function SubtitlePlayer({
                                     compressed={compressed}
                                     selectionState={selectionState}
                                     showCopyButton={showCopyButton}
+                            onExplainAi={onExplainAi}
+                            onExplainAi={onExplainAi}
                                     disabled={disabledSubtitleTracks[s.track]}
                                     subtitle={subtitles[index]}
                                     subtitleRef={subtitleRefs[index]}

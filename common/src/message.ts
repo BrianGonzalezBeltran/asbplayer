@@ -1106,3 +1106,27 @@ export interface CloseStatisticsOverlayMessage extends Message {
     readonly command: 'close-statistics-overlay';
     readonly mediaId: string;
 }
+
+// ── LinguaLens AI Explain ──────────────────────────────────────────────
+
+export interface AiExplainRequestMessage extends MessageWithId {
+    readonly command: 'ai-explain-request';
+    readonly messageId: string;
+    readonly text: string;
+    readonly targetLanguage: string;
+    readonly nativeLanguage: string;
+}
+
+export interface AiExplainResponseMessage extends Message {
+    readonly command: 'ai-explain-response';
+    readonly messageId: string;
+    readonly result?: AiExplainResult;
+    readonly error?: string;
+}
+
+export interface AiExplainResult {
+    readonly translation: string;
+    readonly grammar: string;
+    readonly examples: string[];
+    readonly tip: string;
+}

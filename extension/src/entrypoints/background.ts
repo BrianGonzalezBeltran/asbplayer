@@ -76,6 +76,7 @@ import { AnnotationTutorialState } from '@project/common/global-state';
 import BrowserFeaturesHandler from '@/handlers/asbplayerv2/browser-features-handler';
 import OpenStatisticsHandler from '@/handlers/video/open-statistics-handler';
 import StatisticsOverlayForwarderHandler from '@/handlers/statistics-overlay/statistics-overlay-forwarder-handler';
+import AiExplainHandler from '@/handlers/ai/ai-explain-handler';
 import OpenStatisticsOverlayHandler from '@/handlers/open-statistics-overlay-handler';
 
 export default defineBackground(() => {
@@ -217,6 +218,7 @@ export default defineBackground(() => {
         new ExtensionCommandsHandler(),
         new PageConfigHandler(),
         new BrowserFeaturesHandler(),
+        new AiExplainHandler(),
         new AsbplayerV2ToVideoCommandForwardingHandler(),
         new CaptureVisibleTabHandler(),
         new RequestModelHandler(),

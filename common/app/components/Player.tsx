@@ -149,6 +149,7 @@ interface PlayerProps {
     onSubtitles: React.Dispatch<React.SetStateAction<DisplaySubtitleModel[] | undefined>>;
     onLoadFiles?: () => void;
     disableKeyEvents: boolean;
+    onExplainAi?: (subtitle: any) => void;
     jumpToSubtitle?: SubtitleModel;
     onJumpToSubtitleHandled?: () => void;
     rewindSubtitle?: SubtitleModel;
@@ -194,6 +195,7 @@ const Player = React.memo(function Player({
     onSubtitles,
     onLoadFiles,
     disableKeyEvents,
+    onExplainAi,
     jumpToSubtitle,
     onJumpToSubtitleHandled,
     rewindSubtitle,
@@ -1479,6 +1481,8 @@ const Player = React.memo(function Player({
                         disabledSubtitleTracks={disabledSubtitleTracks}
                         onSeek={handleSeekToTimestamp}
                         onCopy={handleCopyFromSubtitlePlayer}
+                        onExplainAi={onExplainAi}
+                        onExplainAi={onExplainAi}
                         onMouseOver={handleMouseOver}
                         onMouseOut={handleMouseOut}
                         onOffsetChange={handleOffsetChange}
