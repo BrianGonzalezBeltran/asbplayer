@@ -34,6 +34,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import MuiButton from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
 import type { AiExplainResult } from "@project/common";
 import Alert from '@project/common/app/components/Alert';
 import { LocalizedError } from '@project/common/app';
@@ -135,8 +136,9 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
     const [explainLoading, setExplainLoading] = useState(false);
     const [explainResult, setExplainResult] = useState<AiExplainResult | null>(null);
     const [explainError, setExplainError] = useState<string | null>(null);
+    const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
+    const [apiKeyInput, setApiKeyInput] = useState("");
     const [explainText, setExplainText] = useState("");
-
     const keyBinder = useAppKeyBinder(settings.keyBindSet, extension);
     const currentTabId = useCurrentTabId();
     const videoElementCount = useVideoElementCount({ extension, currentTabId });
@@ -614,6 +616,22 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
     const handleCloseExplain = useCallback(() => {
         setExplainOpen(false);
     }, []);
+
+    const handleOpenApiKeyDialog = useCallback(() => {
+        browser.storage.sync.get("groqApiKey", (r: any) => {
+            setApiKeyInput(r.groqApiKey || "");
+        });
+        setApiKeyDialogOpen(true);
+    }, []);
+
+    const handleSaveApiKey = useCallback(() => {
+        browser.storage.sync.set({ groqApiKey: apiKeyInput });
+        setApiKeyDialogOpen(false);
+    }, [apiKeyInput]);
+
+    const handleCloseApiKeyDialog = useCallback(() => {
+        setApiKeyDialogOpen(false);
+    }, []);
     const handleOpenUserGuide = useCallback(() => {
         browser.tabs.create({ active: true, url: 'https://docs.asbplayer.dev/docs/intro' });
     }, []);
@@ -802,7 +820,29 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                                     )}
                                 </DialogContent>
                                 <DialogActions>
+                                    <MuiButton onClick={handleOpenApiKeyDialog}>⚙️ API Key</MuiButton>
                                     <MuiButton onClick={handleCloseExplain}>Close</MuiButton>
+                                </DialogActions>
+                            </Dialog>
+                            <Dialog open={apiKeyDialogOpen} onClose={handleCloseApiKeyDialog} maxWidth="sm" fullWidth>
+                                <DialogTitle>🔑 Groq API Key</DialogTitle>
+                                <DialogContent>
+                                    <Typography variant="body2" sx={{ mb: 2 }}>
+                                        Get a free key at groq.com/console
+                                    </Typography>
+                                    <TextField
+                                        fullWidth
+                                        label="API Key"
+                                        type="password"
+                                        value={apiKeyInput}
+                                        onChange={(e: any) => setApiKeyInput(e.target.value)}
+                                        placeholder="gsk_..."
+                                        size="small"
+                                    />
+                                </DialogContent>
+                                <DialogActions>
+                                    <MuiButton onClick={handleCloseApiKeyDialog}>Cancel</MuiButton>
+                                    <MuiButton onClick={handleSaveApiKey} variant="contained">Save</MuiButton>
                                 </DialogActions>
                             </Dialog>
                             <StatisticsDrawer
