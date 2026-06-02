@@ -1482,7 +1482,6 @@ const Player = React.memo(function Player({
                         onSeek={handleSeekToTimestamp}
                         onCopy={handleCopyFromSubtitlePlayer}
                         onExplainAi={onExplainAi}
-                        onExplainAi={onExplainAi}
                         onMouseOver={handleMouseOver}
                         onMouseOut={handleMouseOut}
                         onOffsetChange={handleOffsetChange}

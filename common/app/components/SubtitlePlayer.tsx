@@ -325,17 +325,6 @@ const SubtitleRow = React.memo(function SubtitleRow({
                     </IconButton>
                 </TableCell>
             )}
-            {onExplainAi && (
-                <TableCell className={classes.copyButton}>
-                    <IconButton
-                        disabled={selectionState !== undefined}
-                        onClick={(e) => { e.stopPropagation(); onExplainAi(subtitle); }}
-                        title="AI Explain"
-                    >
-                        <PsychologyIcon fontSize={compressed ? 'small' : 'medium'} />
-                    </IconButton>
-                </TableCell>
-            )}
             <TableCell className={classes.timestamp}>
                 <div>
                     <span style={{ display: 'none' }}>.</span>
@@ -1195,7 +1184,6 @@ export default function SubtitlePlayer({
                                     compressed={compressed}
                                     selectionState={selectionState}
                                     showCopyButton={showCopyButton}
-                            onExplainAi={onExplainAi}
                             onExplainAi={onExplainAi}
                                     disabled={disabledSubtitleTracks[s.track]}
                                     subtitle={subtitles[index]}
