@@ -1129,4 +1129,5 @@ export interface AiExplainResult {
     readonly grammar: string;
     readonly examples: string[];
     readonly tip: string;
+    readonly ipa?: { uk: string; us: string };
 }

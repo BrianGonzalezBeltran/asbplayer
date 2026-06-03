@@ -3,6 +3,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import LoadSubtitlesIcon from '@project/common/components/LoadSubtitlesIcon';
 import SaveAltIcon from '@mui/icons-material/SaveAlt';
 import ImportExportIcon from '@mui/icons-material/ImportExport';
+import KeyIcon from "@mui/icons-material/Key";
 import BarChartIcon from '@mui/icons-material/BarChart';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
@@ -22,6 +23,7 @@ interface Props {
     onShowMiningHistory: () => void;
     miningHistoryCount: number;
     onShowStatistics: () => void;
+    onOpenApiKeyDialog?: () => void;
     disableBulkExport?: boolean;
 }
 
@@ -36,6 +38,7 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
         miningHistoryCount,
         onShowStatistics,
         disableBulkExport,
+        onOpenApiKeyDialog,
     }: Props,
     ref: ForwardedRef<HTMLDivElement>
 ) {
@@ -94,6 +97,15 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
                             </Tooltip>
                         </IconButton>
                     </Grid>
+                    {onOpenApiKeyDialog && (
+                        <Grid item>
+                            <IconButton onClick={onOpenApiKeyDialog}>
+                                <Tooltip title="AI API Key">
+                                    <KeyIcon />
+                                </Tooltip>
+                            </IconButton>
+                        </Grid>
+                    )}
                 </Grid>
             </Box>
         </Fade>

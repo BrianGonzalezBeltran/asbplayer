@@ -816,11 +816,19 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                                                     <Typography variant="body2">{explainResult.tip}</Typography>
                                                 </>
                                             )}
+                                            {explainResult.ipa && (
+                                                <>
+                                                    <Typography variant="subtitle2" sx={{ mt: 1 }}>🔊 Pronunciation</Typography>
+                                                    <Typography variant="body2" sx={{ fontFamily: "monospace" }}>UK {explainResult.ipa.uk}</Typography>
+                                                    {explainResult.ipa.us !== explainResult.ipa.uk && (
+                                                        <Typography variant="body2" sx={{ fontFamily: "monospace" }}>US {explainResult.ipa.us}</Typography>
+                                                    )}
+                                                </>
+                                            )}
                                         </div>
                                     )}
                                 </DialogContent>
                                 <DialogActions>
-                                    <MuiButton onClick={handleOpenApiKeyDialog}>⚙️ API Key</MuiButton>
                                     <MuiButton onClick={handleCloseExplain}>Close</MuiButton>
                                 </DialogActions>
                             </Dialog>
@@ -870,6 +878,7 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                                 onShowMiningHistory={handleShowCopyHistory}
                                 miningHistoryCount={copyHistoryItems.length}
                                 onShowStatistics={handleShowStatistics}
+                                onOpenApiKeyDialog={handleOpenApiKeyDialog}
                             />
                             <SidePanelBottomControls
                                 disabled={currentTabId !== syncedVideoTab?.id}

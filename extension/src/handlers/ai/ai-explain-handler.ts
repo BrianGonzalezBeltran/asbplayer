@@ -42,7 +42,8 @@ Respond in JSON only, no markdown fences, with this exact structure:
   "translation": "translation in ${msg.nativeLanguage}",
   "grammar": "brief grammar explanation in ${msg.nativeLanguage} (key structures, tenses, notable patterns)",
   "examples": ["example sentence 1 using a key word/pattern", "example sentence 2"],
-  "tip": "one practical learning tip about this text in ${msg.nativeLanguage}"
+  "tip": "one practical learning tip about this text in ${msg.nativeLanguage}",
+  "ipa": { "uk": "UK IPA transcription of the full phrase using Cambridge dictionary format e.g. /ˌsaɪ.kəˈdel.ɪk/", "us": "US IPA transcription if different, otherwise same as UK" }
 }`;
 
             const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -55,7 +56,7 @@ Respond in JSON only, no markdown fences, with this exact structure:
                     model: 'llama-3.3-70b-versatile',
                     messages: [{ role: 'user', content: prompt }],
                     temperature: 0.3,
-                    max_tokens: 500,
+                    max_tokens: 700,
                 }),
             });
 
