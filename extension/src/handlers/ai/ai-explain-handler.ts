@@ -33,7 +33,7 @@ export default class AiExplainHandler implements CommandHandler {
                 };
             }
 
-            const prompt = `You are a language learning assistant. The user is learning "${msg.targetLanguage}" and speaks "${msg.nativeLanguage}".
+            const prompt = `You are a language learning assistant. The user is learning "${msg.targetLanguage}" and speaks "${msg.nativeLanguage}". Explain everything in simple English, never use Spanish.
 
 Analyze this subtitle text: "${msg.text}"
 

@@ -593,7 +593,7 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                     messageId,
                     text,
                     targetLanguage: "English",
-                    nativeLanguage: "Spanish",
+                    nativeLanguage: "Simple English",
                 },
             };
             browser.runtime.sendMessage(request).then((response: any) => {
