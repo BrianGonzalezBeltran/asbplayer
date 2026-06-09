@@ -35,6 +35,9 @@ import DialogActions from "@mui/material/DialogActions";
 import MuiButton from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
+import IconButton from "@mui/material/IconButton";
+import PsychologyIcon from "@mui/icons-material/Psychology";
+import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import type { AiExplainResult, AiTopPhrase } from "@project/common";
 import Alert from '@project/common/app/components/Alert';
 import { LocalizedError } from '@project/common/app';
@@ -623,14 +626,13 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
         setExplainOpen(false);
     }, []);
 
-    const handleTopPhrases = useCallback(() => {
+    const fetchTopPhrases = useCallback(() => {
         if (!subtitles || subtitles.length === 0) return;
         const transcript = subtitles
             .filter((s: any) => s.text && s.text.trim())
             .map((s: any) => `[${s.displayTime}] ${s.text}`)
             .join("\n");
         if (!transcript) return;
-        setTopPhrasesOpen(true);
         setTopPhrasesLoading(true);
         setTopPhrasesResult(null);
         setTopPhrasesError(null);
@@ -656,6 +658,14 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
             setTopPhrasesError(err.message ?? "Failed to send message");
         });
     }, [subtitles]);
+
+    const handleTopPhrases = useCallback(() => {
+        if (!subtitles || subtitles.length === 0) return;
+        setTopPhrasesOpen(true);
+        if (!topPhrasesResult && !topPhrasesLoading) {
+            fetchTopPhrases();
+        }
+    }, [subtitles, topPhrasesResult, topPhrasesLoading, fetchTopPhrases]);
 
     const handleCloseTopPhrases = useCallback(() => {
         setTopPhrasesOpen(false);
@@ -898,7 +908,12 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                                 </DialogActions>
                             </Dialog>
                             <Dialog open={topPhrasesOpen} onClose={handleCloseTopPhrases} maxWidth="md" fullWidth>
-                                <DialogTitle sx={{ pb: 1 }}>✨ Top 10 Phrases to Learn</DialogTitle>
+                                <DialogTitle sx={{ pb: 1, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <span>✨ Top 10 Phrases to Learn</span>
+                                    <MuiButton size="small" onClick={fetchTopPhrases} disabled={topPhrasesLoading}>
+                                        🔄 Refresh
+                                    </MuiButton>
+                                </DialogTitle>
                                 <DialogContent>
                                     {topPhrasesLoading && (
                                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: 32, gap: 16 }}>
@@ -912,12 +927,29 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                                     {topPhrasesResult && topPhrasesResult.map((item: AiTopPhrase, i: number) => (
                                         <div key={i} style={{ marginBottom: 16, padding: 12, borderRadius: 8, background: "rgba(255,255,255,0.05)" }}>
                                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                                <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
+                                                <Typography variant="subtitle2" sx={{ fontWeight: "bold", flex: 1 }}>
                                                     {i + 1}. {item.phrase}
                                                 </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {item.timestamp}
-                                                </Typography>
+                                                <div style={{ display: "flex", gap: 4, alignItems: "center", marginLeft: 8 }}>
+                                                    <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
+                                                        {item.timestamp}
+                                                    </Typography>
+                                                    <IconButton size="small" title="AI Explain" onClick={() => { handleCloseTopPhrases(); handleExplainAi({ text: item.phrase }); }}>
+                                                        <PsychologyIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton size="small" title="Seek to phrase" onClick={() => {
+                                                        const sub = subtitles?.find((s: any) => s.text && s.text.includes(item.phrase.substring(0, 20)));
+                                                        if (sub && currentTabId) {
+                                                            handleCloseTopPhrases();
+                                                            browser.tabs.sendMessage(currentTabId, {
+                                                                sender: "asbplayer-extension-to-player",
+                                                                message: { command: "jump-to-subtitle", subtitle: sub, subtitleFileName: "" },
+                                                            });
+                                                        }
+                                                    }}>
+                                                        <NoteAddIcon fontSize="small" />
+                                                    </IconButton>
+                                                </div>
                                             </div>
                                             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                                                 {item.why}
