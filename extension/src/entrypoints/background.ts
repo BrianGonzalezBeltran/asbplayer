@@ -77,6 +77,7 @@ import BrowserFeaturesHandler from '@/handlers/asbplayerv2/browser-features-hand
 import OpenStatisticsHandler from '@/handlers/video/open-statistics-handler';
 import StatisticsOverlayForwarderHandler from '@/handlers/statistics-overlay/statistics-overlay-forwarder-handler';
 import AiExplainHandler from '@/handlers/ai/ai-explain-handler';
+import AiTopPhrasesHandler from "@/handlers/ai/ai-top-phrases-handler";
 import OpenStatisticsOverlayHandler from '@/handlers/open-statistics-overlay-handler';
 
 export default defineBackground(() => {
@@ -219,6 +220,7 @@ export default defineBackground(() => {
         new PageConfigHandler(),
         new BrowserFeaturesHandler(),
         new AiExplainHandler(),
+        new AiTopPhrasesHandler(),
         new AsbplayerV2ToVideoCommandForwardingHandler(),
         new CaptureVisibleTabHandler(),
         new RequestModelHandler(),

@@ -1131,3 +1131,23 @@ export interface AiExplainResult {
     readonly tip: string;
     readonly ipa?: { uk: string; us: string };
 }
+
+// ── LinguaLens Top Phrases ─────────────────────────────────────────────
+
+export interface AiTopPhrasesRequestMessage extends Message {
+    readonly command: 'ai-top-phrases-request';
+    readonly transcript: string;
+    readonly targetLanguage: string;
+}
+
+export interface AiTopPhrasesResponseMessage extends Message {
+    readonly command: 'ai-top-phrases-response';
+    readonly result?: AiTopPhrase[];
+    readonly error?: string;
+}
+
+export interface AiTopPhrase {
+    readonly phrase: string;
+    readonly timestamp: string;
+    readonly why: string;
+}

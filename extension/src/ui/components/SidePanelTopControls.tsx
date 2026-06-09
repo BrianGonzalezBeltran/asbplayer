@@ -3,6 +3,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import LoadSubtitlesIcon from '@project/common/components/LoadSubtitlesIcon';
 import SaveAltIcon from '@mui/icons-material/SaveAlt';
 import ImportExportIcon from '@mui/icons-material/ImportExport';
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import KeyIcon from "@mui/icons-material/Key";
 import BarChartIcon from '@mui/icons-material/BarChart';
 import Grid from '@mui/material/Grid';
@@ -24,6 +25,7 @@ interface Props {
     miningHistoryCount: number;
     onShowStatistics: () => void;
     onOpenApiKeyDialog?: () => void;
+    onTopPhrases?: () => void;
     disableBulkExport?: boolean;
 }
 
@@ -39,6 +41,7 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
         onShowStatistics,
         disableBulkExport,
         onOpenApiKeyDialog,
+        onTopPhrases,
     }: Props,
     ref: ForwardedRef<HTMLDivElement>
 ) {
@@ -97,6 +100,15 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
                             </Tooltip>
                         </IconButton>
                     </Grid>
+                    {onTopPhrases && (
+                        <Grid item>
+                            <IconButton onClick={onTopPhrases}>
+                                <Tooltip title="Top Phrases to Learn">
+                                    <AutoAwesomeIcon />
+                                </Tooltip>
+                            </IconButton>
+                        </Grid>
+                    )}
                     {onOpenApiKeyDialog && (
                         <Grid item>
                             <IconButton onClick={onOpenApiKeyDialog}>

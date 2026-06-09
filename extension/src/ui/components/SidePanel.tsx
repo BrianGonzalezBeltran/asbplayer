@@ -35,7 +35,7 @@ import DialogActions from "@mui/material/DialogActions";
 import MuiButton from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
-import type { AiExplainResult } from "@project/common";
+import type { AiExplainResult, AiTopPhrase } from "@project/common";
 import Alert from '@project/common/app/components/Alert';
 import { LocalizedError } from '@project/common/app';
 import { useTranslation } from 'react-i18next';
@@ -139,6 +139,12 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
     const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
     const [apiKeyInput, setApiKeyInput] = useState("");
     const [explainText, setExplainText] = useState("");
+
+    // Top Phrases state
+    const [topPhrasesOpen, setTopPhrasesOpen] = useState(false);
+    const [topPhrasesLoading, setTopPhrasesLoading] = useState(false);
+    const [topPhrasesResult, setTopPhrasesResult] = useState<AiTopPhrase[] | null>(null);
+    const [topPhrasesError, setTopPhrasesError] = useState<string | null>(null);
     const keyBinder = useAppKeyBinder(settings.keyBindSet, extension);
     const currentTabId = useCurrentTabId();
     const videoElementCount = useVideoElementCount({ extension, currentTabId });
@@ -617,6 +623,44 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
         setExplainOpen(false);
     }, []);
 
+    const handleTopPhrases = useCallback(() => {
+        if (!subtitles || subtitles.length === 0) return;
+        const transcript = subtitles
+            .filter((s: any) => s.text && s.text.trim())
+            .map((s: any) => `[${s.displayTime}] ${s.text}`)
+            .join("\n");
+        if (!transcript) return;
+        setTopPhrasesOpen(true);
+        setTopPhrasesLoading(true);
+        setTopPhrasesResult(null);
+        setTopPhrasesError(null);
+        const request = {
+            sender: "asbplayerv2",
+            message: {
+                command: "ai-top-phrases-request",
+                transcript,
+                targetLanguage: "English",
+            },
+        };
+        browser.runtime.sendMessage(request).then((response: any) => {
+            setTopPhrasesLoading(false);
+            if (response?.error) {
+                setTopPhrasesError(response.error);
+            } else if (response?.result) {
+                setTopPhrasesResult(response.result);
+            } else {
+                setTopPhrasesError("No response from AI service");
+            }
+        }).catch((err: any) => {
+            setTopPhrasesLoading(false);
+            setTopPhrasesError(err.message ?? "Failed to send message");
+        });
+    }, [subtitles]);
+
+    const handleCloseTopPhrases = useCallback(() => {
+        setTopPhrasesOpen(false);
+    }, []);
+
     const handleOpenApiKeyDialog = useCallback(() => {
         browser.storage.sync.get("groqApiKey", (r: any) => {
             setApiKeyInput(r.groqApiKey || "");
@@ -853,6 +897,38 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                                     <MuiButton onClick={handleSaveApiKey} variant="contained">Save</MuiButton>
                                 </DialogActions>
                             </Dialog>
+                            <Dialog open={topPhrasesOpen} onClose={handleCloseTopPhrases} maxWidth="md" fullWidth>
+                                <DialogTitle sx={{ pb: 1 }}>✨ Top 10 Phrases to Learn</DialogTitle>
+                                <DialogContent>
+                                    {topPhrasesLoading && (
+                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: 32, gap: 16 }}>
+                                            <CircularProgress size={40} />
+                                            <Typography variant="body2" color="text.secondary">Analyzing transcript...</Typography>
+                                        </div>
+                                    )}
+                                    {topPhrasesError && (
+                                        <Typography color="error" variant="body2">{topPhrasesError}</Typography>
+                                    )}
+                                    {topPhrasesResult && topPhrasesResult.map((item: AiTopPhrase, i: number) => (
+                                        <div key={i} style={{ marginBottom: 16, padding: 12, borderRadius: 8, background: "rgba(255,255,255,0.05)" }}>
+                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                                <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
+                                                    {i + 1}. {item.phrase}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {item.timestamp}
+                                                </Typography>
+                                            </div>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                                {item.why}
+                                            </Typography>
+                                        </div>
+                                    ))}
+                                </DialogContent>
+                                <DialogActions>
+                                    <MuiButton onClick={handleCloseTopPhrases}>Close</MuiButton>
+                                </DialogActions>
+                            </Dialog>
                             <StatisticsDrawer
                                 mediaId={syncedVideoTab?.src}
                                 open={statisticsOpen || extensionRequestedLocation === "statistics"}
@@ -879,6 +955,7 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                                 miningHistoryCount={copyHistoryItems.length}
                                 onShowStatistics={handleShowStatistics}
                                 onOpenApiKeyDialog={handleOpenApiKeyDialog}
+                                onTopPhrases={handleTopPhrases}
                             />
                             <SidePanelBottomControls
                                 disabled={currentTabId !== syncedVideoTab?.id}
