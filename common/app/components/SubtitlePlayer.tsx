@@ -204,6 +204,11 @@ const useSubtitleRowStyles = makeStyles<Theme>((theme) => ({
     copyButton: {
         textAlign: 'right',
         padding: 0,
+        opacity: 0,
+        transition: 'opacity 0.15s',
+        '$subtitleRow:hover &, $selectedSubtitleRow:hover &': {
+            opacity: 1,
+        },
     },
 }));
 
@@ -325,7 +330,7 @@ const SubtitleRow = React.memo(function SubtitleRow({
                     </IconButton>
                 </TableCell>
             )}
-            <TableCell className={classes.timestamp}>
+            <TableCell className={classes.timestamp} style={{ display: "none" }}>
                 <div>
                     <span style={{ display: 'none' }}>.</span>
                     {`\n${subtitle.displayTime}\n`}
