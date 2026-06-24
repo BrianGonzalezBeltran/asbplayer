@@ -738,7 +738,7 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
     }
 
     return (
-        <div style={{ width: '100%', height: '100%' }} onMouseMove={handleMouseMove}>
+        <div style={{ width: '100%', height: '100%', background: '#1e1e1e' }} onMouseMove={handleMouseMove}>
             <Alert open={alertOpen} onClose={handleAlertClosed} autoHideDuration={3000} severity={alertSeverity}>
                 {alert}
             </Alert>
@@ -796,6 +796,21 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                     ) : (
                         <>
                             <SidePanelRecordingOverlay show={recordingAudio} />
+                            <SidePanelTopControls
+                                ref={topControlsRef}
+                                show={showTopControls}
+                                onLoadSubtitles={handleLoadSubtitles}
+                                canDownloadSubtitles={canDownloadSubtitles}
+                                onDownloadSubtitles={handleDownloadSubtitles}
+                                onBulkExportSubtitles={handleBulkExportSubtitles}
+                                disableBulkExport={recordingAudio}
+                                onShowMiningHistory={handleShowCopyHistory}
+                                miningHistoryCount={copyHistoryItems.length}
+                                onShowStatistics={handleShowStatistics}
+                                onOpenApiKeyDialog={handleOpenApiKeyDialog}
+                                onTopPhrases={handleTopPhrases}
+                            />
+                            <div style={{ height: 'calc(100% - 52px)', overflow: 'hidden' }}>
                             <Player
                                 origin={browser.runtime.getURL('/sidepanel.html')}
                                 subtitles={subtitles}
@@ -975,20 +990,7 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                                 onOpenInNewWindow={createStatisticsPopup}
                                 sx={{ p: 2 }}
                             />
-                            <SidePanelTopControls
-                                ref={topControlsRef}
-                                show={showTopControls}
-                                onLoadSubtitles={handleLoadSubtitles}
-                                canDownloadSubtitles={canDownloadSubtitles}
-                                onDownloadSubtitles={handleDownloadSubtitles}
-                                onBulkExportSubtitles={handleBulkExportSubtitles}
-                                disableBulkExport={recordingAudio}
-                                onShowMiningHistory={handleShowCopyHistory}
-                                miningHistoryCount={copyHistoryItems.length}
-                                onShowStatistics={handleShowStatistics}
-                                onOpenApiKeyDialog={handleOpenApiKeyDialog}
-                                onTopPhrases={handleTopPhrases}
-                            />
+
                             <SidePanelBottomControls
                                 disabled={currentTabId !== syncedVideoTab?.id}
                                 onMineSubtitle={handleMineSubtitle}
@@ -997,6 +999,7 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                                 audioRecordingEnabled={settings.streamingRecordMedia}
                                 recordingAudio={recordingAudio}
                             />
+                            </div>
                         </>
                     )}
                 </>

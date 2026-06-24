@@ -200,6 +200,7 @@ export const defaultSettings: AsbplayerSettings = {
     streamingTakeScreenshot: true,
     streamingCleanScreenshot: true,
     streamingCropScreenshot: true,
+    streamingCaptureGif: false,
     streamingSubsDragAndDrop: true,
     streamingAutoSync: false,
     streamingAutoSyncPromptOnFailure: false,

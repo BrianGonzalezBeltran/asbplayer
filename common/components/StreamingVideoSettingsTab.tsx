@@ -56,6 +56,7 @@ const StreamingVideoSettingsTab: React.FC<Props> = ({
         streamingTakeScreenshot,
         streamingCleanScreenshot,
         streamingCropScreenshot,
+        streamingCaptureGif,
         streamingSubsDragAndDrop,
         streamingAutoSync,
         streamingAutoSyncPromptOnFailure,
@@ -170,6 +171,16 @@ const StreamingVideoSettingsTab: React.FC<Props> = ({
                         />
                     }
                     label={t('extension.settings.cropScreenshot')}
+                    labelPlacement="start"
+                />
+                <SwitchLabelWithHoverEffect
+                    control={
+                        <Switch
+                            checked={streamingCaptureGif}
+                            onChange={(e) => onSettingChanged('streamingCaptureGif', e.target.checked)}
+                        />
+                    }
+                    label="Capture GIF instead of screenshot"
                     labelPlacement="start"
                 />
                 <SettingsSection>{t('settings.subtitles')}</SettingsSection>

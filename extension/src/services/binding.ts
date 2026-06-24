@@ -95,6 +95,7 @@ import { pgsParserWorkerFactory } from './pgs-parser-worker-factory';
 import { DictionaryProvider } from '@project/common/dictionary-db/dictionary-provider';
 import { ExtensionDictionaryStorage } from './extension-dictionary-storage';
 import { HoveredToken } from '@project/common/subtitle-annotations';
+import { GIFEncoder, quantize, applyPalette } from "gifenc";
 
 let netflix = false;
 document.addEventListener('asbplayer-netflix-enabled', (e) => {
@@ -781,6 +782,20 @@ export default class Binding {
                     case 'settings-updated':
                         this._refreshSettings();
                         break;
+                    case 'encode-gif': {                        console.log('BINDING: received encode-gif');
+                        const gifMsg = request.message as any;
+                        this._encodeGif(gifMsg.frameDataUrls, gifMsg.delay, gifMsg.maxWidth, gifMsg.maxHeight, gifMsg.rect)
+                            .then((gifBase64: string) => sendResponse({ gifBase64 }))
+                            .catch((e: any) => sendResponse({ error: e.message }));
+                        return true;
+                    }
+                    case 'capture-gif-frames': {
+                        const gifMsg = request.message as any;
+                        this._captureGifFrames(gifMsg.durationMs, gifMsg.frameInterval, gifMsg.maxWidth, gifMsg.maxHeight)
+                            .then((result) => sendResponse(result))
+                            .catch((e) => sendResponse({ frames: [], delays: [], error: e.message }));
+                        return true; // keep channel open for async response
+                    }
                     case 'copy-subtitle':
                         const copySubtitleMessage = request.message as CopySubtitleMessage;
 
@@ -1817,5 +1832,134 @@ export default class Binding {
         }
 
         return window.location !== window.parent.location ? document.referrer : document.location.href;
+    }
+
+    async _encodeGif(frameDataUrls: string[], delay: number, maxWidth: number, maxHeight: number, rect?: { left: number; top: number; width: number; height: number }): Promise<string> {
+        const firstImg = new Image();
+        await new Promise<void>((resolve, reject) => {
+            firstImg.onload = () => resolve();
+            firstImg.onerror = () => reject(new Error('Failed to load frame'));
+            firstImg.src = frameDataUrls[0];
+        });
+
+        // If rect is provided, use it to crop to the video player area
+        const imgW = firstImg.naturalWidth;
+        const imgH = firstImg.naturalHeight;
+        const sx = rect ? Math.round(rect.left / window.innerWidth * imgW) : 0;
+        const sy = rect ? Math.round(rect.top / window.innerHeight * imgH) : 0;
+        const sw = rect ? Math.round(rect.width / window.innerWidth * imgW) : imgW;
+        const sh = rect ? Math.round(rect.height / window.innerHeight * imgH) : imgH;
+
+        let width = sw;
+        let height = sh;
+        if (width > maxWidth) {
+            height = Math.round(height * (maxWidth / width));
+            width = maxWidth;
+        }
+        if (height > maxHeight) {
+            width = Math.round(width * (maxHeight / height));
+            height = maxHeight;
+        }
+        width = width & ~1;
+        height = height & ~1;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.style.display = 'none';
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext('2d')!;
+
+        // Use MediaRecorder to create a WebM video from frames
+        const stream = canvas.captureStream(0); // 0 = manual frame control
+        const recorder = new MediaRecorder(stream, {
+            mimeType: 'video/webm;codecs=vp8',
+            videoBitsPerSecond: 1000000,
+        });
+
+        const chunks: Blob[] = [];
+        recorder.ondataavailable = (e) => {
+            if (e.data.size > 0) chunks.push(e.data);
+        };
+
+        const recordingDone = new Promise<void>((resolve) => {
+            recorder.onstop = () => resolve();
+        });
+
+        recorder.start();
+
+        // Draw each frame and request a new frame from the stream
+        for (const dataUrl of frameDataUrls) {
+            const img = new Image();
+            await new Promise<void>((resolve, reject) => {
+                img.onload = () => resolve();
+                img.onerror = () => reject(new Error('Failed to load frame'));
+                img.src = dataUrl;
+            });
+
+            ctx.clearRect(0, 0, width, height);
+            ctx.drawImage(img, sx, sy, sw, sh, 0, 0, width, height);
+            (stream.getVideoTracks()[0] as any).requestFrame();
+            // Hold each frame for the delay duration
+            await new Promise((r) => setTimeout(r, delay));
+        }
+
+        recorder.stop();
+        await recordingDone;
+
+        canvas.remove();
+
+        const webmBlob = new Blob(chunks, { type: 'video/webm' });
+        const arrayBuffer = await webmBlob.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuffer);
+        return btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(''));
+    }
+
+    async _captureGifFrames(durationMs: number, frameInterval: number, maxWidth: number, maxHeight: number): Promise<{ frames: string[]; delays: number[] }> {
+        const video = this.video as HTMLVideoElement;
+        if (!(video instanceof HTMLVideoElement)) {
+            throw new Error('Not a video element');
+        }
+
+        const canvas = document.createElement('canvas');
+        let width = video.videoWidth;
+        let height = video.videoHeight;
+        if (width > maxWidth) {
+            height = Math.round(height * (maxWidth / width));
+            width = maxWidth;
+        }
+        if (height > maxHeight) {
+            width = Math.round(width * (maxHeight / height));
+            height = maxHeight;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d')!;
+
+        const frames: string[] = [];
+        const delays: number[] = [];
+        const startTime = Date.now();
+        let lastFrameTime = startTime;
+
+        while (Date.now() - startTime < durationMs) {
+            ctx.drawImage(video, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            const base64 = dataUrl.substring(dataUrl.indexOf(',') + 1);
+            const now = Date.now();
+            frames.push(base64);
+            delays.push(now - lastFrameTime);
+            lastFrameTime = now;
+
+            const elapsed = Date.now() - startTime;
+            const remaining = durationMs - elapsed;
+            if (remaining > frameInterval) {
+                await new Promise((r) => setTimeout(r, frameInterval));
+            } else {
+                break;
+            }
+        }
+
+        canvas.remove();
+        return { frames, delays };
     }
 }

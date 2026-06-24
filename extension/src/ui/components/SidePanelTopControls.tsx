@@ -54,9 +54,8 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
     }, []);
 
     return (
-        <Fade in={show || forceShow}>
-            <Box ref={ref} style={{ position: 'absolute', top: 12, right: 12 }}>
-                <Grid container direction="column">
+            <Box ref={ref} style={{ position: 'sticky', top: 0, zIndex: 1000, background: 'rgba(30,30,30,0.95)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '4px 8px' }}>
+                <Grid container direction="row" justifyContent="center" alignItems="center" spacing={1}>
                     <Grid item>
                         <Tooltip title={t('action.loadSubtitles')!}>
                             <IconButton onClick={onLoadSubtitles}>
@@ -120,7 +119,6 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
                     )}
                 </Grid>
             </Box>
-        </Fade>
     );
 });
 

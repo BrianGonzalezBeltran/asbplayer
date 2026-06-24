@@ -16,12 +16,14 @@ import {
 import { SettingsProvider } from '@project/common/settings';
 import { CardPublisher } from '../../services/card-publisher';
 import AudioRecorderService, { DrmProtectedStreamError } from '../../services/audio-recorder-service';
+import GifCapturer from '../../services/gif-capturer';
 
 export default class RecordMediaHandler {
     private readonly _audioRecorder: AudioRecorderService;
     private readonly _imageCapturer: ImageCapturer;
     private readonly _cardPublisher: CardPublisher;
     private readonly _settingsProvider: SettingsProvider;
+    private readonly _gifCapturer: GifCapturer;
 
     constructor(
         audioRecorder: AudioRecorderService,
@@ -33,6 +35,7 @@ export default class RecordMediaHandler {
         this._imageCapturer = imageCapturer;
         this._cardPublisher = cardPublisher;
         this._settingsProvider = settingsProvider;
+        this._gifCapturer = new GifCapturer();
     }
 
     get sender() {
@@ -75,7 +78,35 @@ export default class RecordMediaHandler {
             });
         }
 
-        if (message.screenshot) {
+        const captureGif = await this._settingsProvider.getSingle('streamingCaptureGif');
+        let gifPromise: Promise<string> | undefined = undefined;
+
+        if (message.screenshot && captureGif && message.record) {
+            // Start GIF capture in parallel with audio — video is playing right now
+            const durationMs = Math.min(
+                (subtitle.end - subtitle.start) / message.playbackRate + message.audioPaddingEnd * 1000,
+                10000
+            );
+            gifPromise = this._gifCapturer.capture({
+                tabId: senderTab.id!,
+                durationMs,
+                frameInterval: 500,
+                maxWidth: 720,
+                maxHeight: 405,
+                rect: message.rect,
+                src: recordMediaCommand.src,
+            });
+            gifPromise.finally(() => {
+                const screenshotTakenCommand: ExtensionToVideoCommand<ScreenshotTakenMessage> = {
+                    sender: 'asbplayer-extension-to-video',
+                    message: { command: 'screenshot-taken' },
+                    src: recordMediaCommand.src,
+                };
+                browser.tabs.sendMessage(senderTab.id!, screenshotTakenCommand);
+            });
+        }
+
+        if (message.screenshot && !captureGif) {
             const { maxWidth, maxHeight, rect, frameId } = message;
             const screenshotDelay = Math.max(
                 0,
@@ -101,6 +132,7 @@ export default class RecordMediaHandler {
             });
         }
 
+        // Wait for audio to finish first
         if (audioPromise) {
             const { audioPaddingStart: paddingStart, audioPaddingEnd: paddingEnd, playbackRate } = message;
             const baseAudioModel: AudioModel = {
@@ -129,11 +161,26 @@ export default class RecordMediaHandler {
             }
         }
 
-        if (imagePromise) {
+        // GIF: capture was started before audio, now wait for it
+        if (gifPromise) {
+            try {
+                const gifBase64 = await gifPromise;
+                imageModel = {
+                    base64: gifBase64,
+                    extension: 'webm',
+                };
+            } catch (e) {
+                console.error('GIF capture failed:', e);
+                imageModel = {
+                    base64: '',
+                    extension: 'jpeg',
+                    error: ImageErrorCode.captureFailed,
+                };
+            }
+        } else if (imagePromise) {
             try {
                 await imagePromise;
 
-                // Use the last screenshot taken to allow user to re-take screenshot while audio is recording
                 imageModel = {
                     base64: this._imageCapturer.lastImageBase64!,
                     extension: 'jpeg',

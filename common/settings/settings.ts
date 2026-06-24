@@ -616,6 +616,7 @@ export interface StreamingVideoSettings {
     readonly streamingTakeScreenshot: boolean;
     readonly streamingCleanScreenshot: boolean;
     readonly streamingCropScreenshot: boolean;
+    readonly streamingCaptureGif: boolean;
     readonly streamingSubsDragAndDrop: boolean;
     readonly streamingAutoSync: boolean;
     readonly streamingAutoSyncPromptOnFailure: boolean;

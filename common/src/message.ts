@@ -1151,3 +1151,18 @@ export interface AiTopPhrase {
     readonly timestamp: string;
     readonly why: string;
 }
+
+// ── LinguaLens GIF Capture ─────────────────────────────────────────────
+
+export interface CaptureGifFramesMessage extends Message {
+    readonly command: 'capture-gif-frames';
+    readonly durationMs: number;
+    readonly frameInterval: number;
+    readonly maxWidth: number;
+    readonly maxHeight: number;
+}
+
+export interface CaptureGifFramesResponse {
+    readonly frames: string[];
+    readonly delays: number[];
+}

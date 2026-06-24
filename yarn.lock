@@ -3588,6 +3588,7 @@ __metadata:
     "@types/semver": ^7.7.0
     "@types/uuid": ^10.0.0
     "@wxt-dev/module-react": ^1.2.2
+    gifenc: ^1.0.3
     i18next: ^25.3.2
     jest: ^30.0.5
     m3u8-parser: ^7.2.0
@@ -8170,6 +8171,13 @@ __metadata:
     gh-pages: bin/gh-pages.js
     gh-pages-clean: bin/gh-pages-clean.js
   checksum: 42be2f4a165ad16affc5c75669bc061abe97a34344923e1f82e1a25bce2d1a529d72e21cd3c3a6b381c2861dfc0a4a823a707223b34be73fd4f7d5e27cc30d1a
+  languageName: node
+  linkType: hard
+
+"gifenc@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "gifenc@npm:1.0.3"
+  checksum: f9666247233b83033904878199ae32ea2189bf67b617fe92244a2a4b973ae641628979280c7e1d88edc3ef69a67145f69ccbb602e12ee55f89b03c975ee71919
   languageName: node
   linkType: hard
 
